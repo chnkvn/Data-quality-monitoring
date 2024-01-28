@@ -9,8 +9,8 @@ class Sensor:
     """Create a sensor that returns the number
     of visitors given a date and an hour."""
 
-    avg_visit = field(converter=int)
-    std_visit = field(converter=float)
+    avg_visit: int = field(converter=int)
+    std_visit: float = field(converter=float)
     perc_break: float = field(converter=float, default=0.015)
     perc_malfunction: float = field(converter=float, default=0.035)
     open_hours = list(range(9, 22))
