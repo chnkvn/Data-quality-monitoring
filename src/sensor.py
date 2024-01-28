@@ -3,7 +3,6 @@ from datetime import date, timedelta
 import numpy as np
 from attrs import define, field
 
-
 @define
 class Sensor:
     """Create a sensor that returns the number
@@ -15,7 +14,7 @@ class Sensor:
     perc_malfunction: float = field(converter=float, default=0.035)
     open_hours = list(range(9, 22))
 
-    def simulate_visit_count(self, business_date: date, hour: int) -> int:
+    def simulate_visit_count(self, business_date: date) -> int:
         """Simulate the number of person detected by the sensor given a date and an hour"""
 
         # For reprocubility
@@ -42,9 +41,9 @@ class Sensor:
             visits -= 1
         return visits
 
-    def get_visit_count(self, business_date: date, hour: int) -> int:
+    def get_visit_count(self, business_date:date, hour:int) -> int:
         """Returns the number of visitors from the store opening hour to the hour passed in parameters."""
-        # For reprocubility
+        #For reprocubility
         np.random.seed(seed=business_date.toordinal())
 
         visitors_count = 0
@@ -53,19 +52,19 @@ class Sensor:
         # The sensor can break sometimes
         # Also return 0 when hour in closing hours
         if proba_malfunction < self.perc_break or hour not in self.open_hours:
-            return visitors_count
-        visits = self.simulate_visit_count(business_date, hour)
-
+           return visitors_count
+        if business_date.weekday() == 6:
+           return -1
+        visits = self.simulate_visit_count(business_date)
         # The sensor can also malfunction
         if proba_malfunction < self.perc_malfunction:
             visits *= 0.2  # make it so bad we can detect it ;)
         visits = np.floor(visits)
         for hour_, visit_count in zip(self.open_hours, visits):
-            visitors_count += visit_count
-            if hour_ == hour:
-                break
+                visitors_count += visit_count
+                if hour_==hour:
+                        break
         return int(visitors_count)
-
 
 if __name__ == "__main__":
     if len(sys.argv) > 2:

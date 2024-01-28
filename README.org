@@ -3,8 +3,8 @@
 * Data Creation
 - The first part of this project is to create fake data
 - It should be requestable with an API
-
-** class definition :noexport:
+** main functions
+*** class definition :noexport:
 #+begin_src python :tangle src/sensor.py
 import sys
 from datetime import date, timedelta
@@ -23,9 +23,9 @@ class Sensor:
     open_hours = list(range(9, 22))
 
 #+end_src
-** simulate_visit_count_method :noexport:
+*** simulate_visit_count_method :noexport:
 #+begin_src python :tangle src/sensor.py
-    def simulate_visit_count(self, business_date: date, hour: int) -> int:
+    def simulate_visit_count(self, business_date: date) -> int:
         """Simulate the number of person detected by the sensor given a date and an hour"""
 
         # For reprocubility
@@ -53,7 +53,7 @@ class Sensor:
         return visits
 #+end_src
 
-** get_visit_count method :noexport:
+*** get_visit_count method :noexport:
 #+begin_src python :tangle src/sensor.py
     def get_visit_count(self, business_date:date, hour:int) -> int:
         """Returns the number of visitors from the store opening hour to the hour passed in parameters."""
@@ -67,8 +67,9 @@ class Sensor:
         # Also return 0 when hour in closing hours
         if proba_malfunction < self.perc_break or hour not in self.open_hours:
            return visitors_count
-        visits = self.simulate_visit_count(business_date, hour)
-
+        if business_date.weekday() == 6:
+           return -1
+        visits = self.simulate_visit_count(business_date)
         # The sensor can also malfunction
         if proba_malfunction < self.perc_malfunction:
             visits *= 0.2  # make it so bad we can detect it ;)
@@ -79,7 +80,7 @@ class Sensor:
                         break
         return int(visitors_count)
 #+end_src
-** __main__ :noexport:
+*** __main__ :noexport:
 #+begin_src python :tangle src/sensor.py
 if __name__ == "__main__":
     if len(sys.argv) > 2:
@@ -92,4 +93,81 @@ if __name__ == "__main__":
 
     captor = Sensor(1500, 150)
     print(captor.get_visit_count(queried_date, hour))
+#+end_src
+** Unit tests :noexport:
+#+begin_src python :tangle tests/test_sensors.py
+import unittest
+from datetime import date
+
+import numpy as np
+from data_quality_monitoring.src.sensor import Sensor
+
+class TestVisitSensor(unittest.TestCase):
+    def test_weekdays_open(self):
+        for test_day in range(11, 17):
+            with self.subTest(i=test_day):
+                visit_sensor = Sensor(1200, 300)
+                visit_count = visit_sensor.simulate_visit_count(date(2023, 9, test_day))
+                self.assertFalse(-1 in set(visit_count))
+
+    def test_sunday_closed(self):
+        visit_sensor = Sensor(1200, 300)
+        visit_count = visit_sensor.simulate_visit_count(date(2023, 9, 17))
+        self.assertEqual(set(visit_count), {-1})
+
+    def test_with_break(self):
+        visit_sensor = Sensor(1500, 150, perc_break=15)
+        visit_count = visit_sensor.get_visit_count(date(2023, 10, 12), 20)
+        self.assertEqual(visit_count, 0)
+
+    def test_with_malfunction(self):
+        visit_sensor = Sensor(1500, 150, perc_malfunction=15)
+        visit_count = visit_sensor.get_visit_count(date(2023, 10, 12), 20)
+        self.assertEqual(visit_count, 276)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+#+end_src
+* API
+- Creation of an api with FastAPI
+#+begin_src python :tangle app.py
+import logging
+from datetime import date
+
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from src.sensor import Sensor
+
+sensor = Sensor(5000, 750)
+app = FastAPI()
+
+
+@app.get("/")
+def get_nb_visitors(year: int, month: int, day: int, hour: int = 21) -> JSONResponse:
+    # Check the year
+    if year < 2020:
+        return JSONResponse(status_code=404, content="No data before 2020")
+
+    # Check the date
+    try:
+        requested_date = date(year, month, day)
+    except ValueError as e:
+        logging.error(f"Could not cast date: {e}")
+        return JSONResponse(status_code=404, content="Enter a valid date")
+
+    # Check the date is in the past
+    if date.today() < requested_date:
+        return JSONResponse(status_code=404, content="Choose a date in the past")
+    if hour > max(sensor.open_hours):
+        visit_counts = sensor.get_visit_count(requested_date, 21)
+    else:
+        visit_counts = sensor.get_visit_count(requested_date, hour)
+    if visit_counts < 0 or hour < min(sensor.open_hours):
+        return JSONResponse(
+            status_code=404, content="The store was closed try another date or hour."
+        )
+    return JSONResponse(status_code=200, content=visit_counts)
 #+end_src
