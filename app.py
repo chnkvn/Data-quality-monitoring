@@ -21,7 +21,6 @@ def get_nb_visitors(year: int, month: int, day: int, hour: int = 21) -> JSONResp
     except ValueError as e:
         logging.error(f"Could not cast date: {e}")
         return JSONResponse(status_code=404, content="Enter a valid date")
-
     # Check the date is in the past
     if date.today() < requested_date:
         return JSONResponse(status_code=404, content="Choose a date in the past")

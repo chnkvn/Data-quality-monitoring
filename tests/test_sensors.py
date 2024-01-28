@@ -4,6 +4,7 @@ from datetime import date
 import numpy as np
 from data_quality_monitoring.src.sensor import Sensor
 
+
 class TestVisitSensor(unittest.TestCase):
     def test_weekdays_open(self):
         for test_day in range(11, 17):
