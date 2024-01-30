@@ -321,7 +321,7 @@ def get_nb_visitors(store_name: str="Nancy", year: int=2021, month: int=1, day: 
 
 * Data Extraction
   :PROPERTIES:
- :header-args:python: :tangle data_extraction.py
+ # :header-args:python: :tangle data_extraction.py
   :END:
 The goal is to request the API to build our data.
 You must deploy the API locally before running the script.
@@ -403,7 +403,7 @@ if __name__ == '__main__':
 #+end_src
 * Transform Data
   :PROPERTIES:
-  :header-args:python: :tangle data_transformation.py
+:header-args:python: :tangle data_transformation.py
   :END:
 ** Import
 #+begin_src python
@@ -429,29 +429,117 @@ def read_data() -> pd.DataFrame:
     # Keep only the numbers, replace others values by NaN
     df['count'] = df['count'].str.replace(r"b'(\d+| )'",r'\1', regex=True)
     df['count'] = pd.to_numeric(df['count'], errors="coerce")
-    print(df.head())
-    print(df.shape)
     return df
 #+end_src
 ** daily trafic
 #+begin_src python
-
 def get_daily_traffic_per_store(df:pd.DataFrame) -> pd.DataFrame:
     """Keep rows where:
     - units value is equal to visitor
     - sensor_id is not a null value"""
-    query = """SELECT date, store, sum(count) as traffic
-    FROM df
-    WHERE units == 'visitors' AND sensor_id is not NULL
-    GROUP BY date, store
-    ORDER BY date, store""" 
+    query = """SELECT date, store, sensor_id, weekday, sum(count) as daily_traffic FROM df
+    WHERE units == 'visitors' and sensor_id IS NOT NULL
+    GROUP BY date, weekday, store, sensor_id
+    ORDER BY date, store, sensor_id
+    """
+    result_df = duckdb.sql(query).df()
+    return result_df
+#+end_src
+** traffic average over 1 month
+#+begin_src python
+def traffic_average_week(df:pd.DataFrame, n_week:int = 4):
+    """Compute the moving average over the last $n_weeks weeks"""
+    query = f"""
+    SELECT date,
+    store,
+    weekday,
+    sensor_id,
+daily_traffic,
+    AVG(daily_traffic)
+    OVER(PARTITION BY weekday, store, sensor_id
+    ORDER BY date
+    ROWS BETWEEN  {n_week-1} PRECEDING AND CURRENT ROW)
+    AS avg_n_weeks
+    from df
+    ORDER BY date, sensor_id, store
+    """
     return duckdb.sql(query).df()
+#+end_src
+** percentage_change
+#+begin_src python
+def pct_traffic_average_week(df:pd.DataFrame, n_week:int = 4):
+    """Compute the percentage change between the moving average
+    and the average of the current week"""
+    query = f"""
+    SELECT date, store, weekday, sensor_id,
+    daily_traffic, avg_n_weeks,
+    LAG(avg_n_weeks)
+    OVER(PARTITION BY weekday, store, sensor_id
+    ORDER BY date)  AS lag_avg_n_weeks,
+    (100*(avg_n_weeks - lag_avg_n_weeks)/lag_avg_n_weeks) as pct_change
+    from df
+    """
+    return duckdb.sql(query).df()
+
+#+end_src
+** save_df_to_parquet
+#+begin_src python
+def save_df_to_parquet(df:pd.DataFrame):
+    """Create the folder filtered in data/ and save the dataframe to a parquet file"""
+    save_path = 'data/filtered'
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    df.to_parquet(Path(save_path, 'df.parquet.gzip'),
+              compression='gzip', index=False)
+
+#+end_src
+
+** generate_filtered_data
+#+begin_src python
+def generate_filtered_data():
+    df =  read_data()
+    df= get_daily_traffic_per_store(df)
+    df = traffic_average_week(df)
+    df = pct_traffic_average_week(df)
+    save_df_to_parquet(df)
+
 #+end_src
 ** __main__
 #+begin_src python
-
 if __name__ == '__main__':
-   df =  read_data()
-   df1 = get_daily_traffic_per_store(df)
-   print(df1.head(10))
+   generate_filtered_data()
+
+
+#+end_src
+* App
+:properties:
+  :header-args:python: :tangle app_streamlit.py
+:end:
+** Imports
+#+begin_src python
+import duckdb
+import pandas as pd
+import streamlit as st
+
+df = pd.read_parquet('data/filtered/df.parquet.gzip')
+print(df.shape)
+print(df.columns)
+#+end_src
+** List of stores, sensors
+#+begin_src python
+st.dataframe(df.sample(frac=1).head(50))
+with st.sidebar:
+    available_stores_df = duckdb.sql('SELECT store from df').df()
+    store = st.selectbox('Pick a store to check its stats.',
+                         available_stores_df['store'].unique(),
+                         index=None,
+                         placeholder='Pick a store')
+    if store:
+        st.write(f'Selected store: {store}')
+        available_sensors_df = duckdb.sql(f'SELECT DISTINCT sensor_id from df where store = {store}')
+
+st.header("enter your code:")
+form = st.form("my_form")
+query = form.text_area(label="votre code SQL ici", key="user_input")
+form.form_submit_button("Submit")
+    
 #+end_src
