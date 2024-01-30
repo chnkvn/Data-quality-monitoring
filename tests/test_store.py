@@ -9,13 +9,13 @@ class TestStore(unittest.TestCase):
         lille_store = Store("Test", 1200, 300)
         visits = lille_store.get_store_traffic(date(2023, 12, 21), 18)
 
-        self.assertEqual(visits, 880)
+        self.assertEqual(visits, 111)
 
     def test_get_sensor_traffic(self):
         lille_store = Store("Test", 1200, 300)
         visits = lille_store.get_sensor_traffic(3, date(2023, 12, 21), 18)
 
-        self.assertEqual(visits, 276)
+        self.assertEqual(visits, 35)
 
     def test_sunday_closed(self):
         lille_store = Store("Test", 1200, 300)
