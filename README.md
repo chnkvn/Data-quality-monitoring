@@ -1,24 +1,48 @@
 
 # Table of Contents
 
-1.  [Data Creation](#org8b207ba)
-2.  [API](#org3e34bf6)
-3.  [Data Extraction](#orgae86475)
-4.  [Transform Data](#org7c73672)
-5.  [App](#orgb926869)
+1.  [Objective](#org2b76a70)
+2.  [Installation](#orgc039987)
+3.  [Data Creation](#org33d5ce6)
+4.  [API](#orgcd3df2f)
+5.  [Data Extraction](#org17098fd)
+6.  [Transform Data](#orgfdb4287)
+7.  [App](#org72d8f56)
 
 
 
-<a id="org8b207ba"></a>
+<a id="org2b76a70"></a>
+
+# Objective
+
+-   Illustrate a small process of data engineering
+    -   Creation of fake data
+    -   API creation and API requests
+    -   Data Extraction
+    -   Data transformation
+    -   WebApp creation for dava visualisation
+    -   Using workflows to check code syntax (black)
+
+
+<a id="orgc039987"></a>
+
+# Installation
+
+-   Create a new virtual environment, using poetry, venv, conda
+-   run `pip install -r requirements.txt`
+
+
+<a id="org33d5ce6"></a>
 
 # Data Creation
 
 -   The first part of this project is to create fake data
 -   It should be requestable with an API
 -   Fake data creation using numpy
+-   Unit tests for Sensor and Store classes `python tests/test_sensors.py` `python tests/test_store.py`
 
 
-<a id="org3e34bf6"></a>
+<a id="orgcd3df2f"></a>
 
 # API
 
@@ -27,7 +51,7 @@
 -   To launch the api locally, run `uvicorn app:app --reload`
 
 
-<a id="orgae86475"></a>
+<a id="org17098fd"></a>
 
 # Data Extraction
 
@@ -35,7 +59,7 @@ The goal is to request the API to build our data.
 You must deploy the API locally before running the script.
 
 
-<a id="org7c73672"></a>
+<a id="orgfdb4287"></a>
 
 # Transform Data
 
@@ -45,7 +69,7 @@ You must deploy the API locally before running the script.
 -   Export to parquet file
 
 
-<a id="orgb926869"></a>
+<a id="org72d8f56"></a>
 
 # App
 

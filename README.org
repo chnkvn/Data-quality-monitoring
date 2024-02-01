@@ -1,10 +1,23 @@
 #+TITLE: Data Quality Monitoring
 #+autotangle: t
 #+startup: overview
+* Objective
+- Illustrate a small process of data engineering
+  - Creation of fake data
+  - API creation and API requests
+  - Data Extraction
+  - Data transformation
+  - WebApp creation for dava visualisation
+  - Using workflows to check code syntax (black)
+* Installation
+- Create a new virtual environment, using poetry, venv, conda
+- run ~pip install -r requirements.txt~
 * Data Creation
 - The first part of this project is to create fake data
 - It should be requestable with an API
 - Fake data creation using numpy
+- Unit tests for Sensor and Store classes ~python tests/test_sensors.py~ ~python tests/test_store.py~
+
 ** Sensor :noexport:
 :properties:
 # :header-args:python: :tangle src/sensor.py
