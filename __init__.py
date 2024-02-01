@@ -13,8 +13,8 @@ def create_data() -> dict:
     """
 
     store_name = ["Nancy", "Paris", "Lille", "Cholet", "Cabourg"]
-    store_avg_visit = [3000, 8000, 6000, 2000, 1700]
-    store_std_visit = [500, 800, 500, 400, 100]
+    store_avg_visit = [4444, 8000, 5600, 2000, 2750]
+    store_std_visit = [2800, 750, 1200, 300, 1000]
     perc_malfunction = [0.05, 0.1, 0.08, 0.05, 0.05]
     perc_break = [0.05, 0.08, 0.05, 0.02, 0]
 

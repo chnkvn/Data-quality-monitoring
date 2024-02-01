@@ -1,11 +1,16 @@
 #+TITLE: Data Quality Monitoring
 #+autotangle: t
+#+startup: overview
 * Data Creation
 - The first part of this project is to create fake data
 - It should be requestable with an API
-** Sensor
-*** class definition :noexport:
-#+begin_src python :tangle src/sensor.py
+- Fake data creation using numpy
+** Sensor :noexport:
+:properties:
+# :header-args:python: :tangle src/sensor.py
+:end:
+*** class definition
+#+begin_src python
 import sys
 from datetime import date, timedelta
 import numpy as np
@@ -23,8 +28,8 @@ class Sensor:
     open_hours = list(range(9, 22))
 
 #+end_src
-*** simulate_visit_count_method :noexport:
-#+begin_src python :tangle src/sensor.py
+*** simulate_visit_count_method
+#+begin_src python
     def simulate_visit_count(self, business_date: date) -> int:
         """Simulate the number of person detected by the sensor given a date and an hour"""
 
@@ -53,8 +58,8 @@ class Sensor:
         return visits
 #+end_src
 
-*** get_visit_count method :noexport:
-#+begin_src python :tangle src/sensor.py
+*** get_visit_count method
+#+begin_src python
     def get_visit_count(self, business_date:date, hour:int) -> int:
         """Returns the number of visitors from the store opening hour to the hour passed in parameters."""
         #For reprocubility
@@ -75,13 +80,13 @@ class Sensor:
             visits *= 0.2  # make it so bad we can detect it ;)
         visits = np.floor(visits)
         for hour_, visit_count in zip(self.open_hours, visits):
-                visitors_count += visit_count
                 if hour_==hour:
-                        break
+                    visitors_count = visit_count
+                    break
         return int(visitors_count)
 #+end_src
-*** __main__ :noexport:
-#+begin_src python :tangle src/sensor.py
+*** __main__
+#+begin_src python
 if __name__ == "__main__":
     if len(sys.argv) > 2:
         year, month, day = [int(v) for v in sys.argv[1].split("-")]
@@ -94,9 +99,12 @@ if __name__ == "__main__":
     captor = Sensor(1500, 150)
     print(captor.get_visit_count(queried_date, hour))
 #+end_src
-** Store
-*** class definition :noexport:
-#+begin_src python :tangle src/store.py
+** Store :noexport:
+:properties:
+# :header-args:python: :tangle src/store.py
+:end:
+*** class definition
+#+begin_src python
 from datetime import date
 
 import numpy as np
@@ -126,28 +134,31 @@ class Store:
             for percent in traffic_percentage
         ]
 #+end_src
-*** get sensor traffic :noexport:
-#+begin_src python :tangle src/store.py
+*** get sensor traffic
+#+begin_src python
     def get_sensor_traffic(self, sensor_id : int, requested_date:date, hour:int) -> int:
         """Return the traffic of a sensor given a date and an hour"""
         return self.sensors[sensor_id].get_visit_count(requested_date, hour)
 #+end_src
-*** get store traffic :noexport:
-#+begin_src python :tangle src/store.py
+*** get store traffic
+#+begin_src python
     def get_store_traffic(self, requested_date:date, hour:int) -> int:
         """Return the traffic of all the sensors given a date and an hour"""
         traffic = sum(sensor.get_visit_count(requested_date, hour) for sensor in self.sensors)
         return traffic
 #+end_src
 *** __main__ :noexport:
-#+begin_src python :tangle src/store.py
+#+begin_src python
 if __name__ == '__main__':
     lille_store = Store("Test", 1200, 300)
     visits = lille_store.get_store_traffic(date(2023, 12, 21), 18)
     print(visits)
 #+end_src
 ** init :noexport:
-#+begin_src python :tangle __init__.py
+:properties:
+# :header-args:python: :tangle __init__.py
+:end:
+#+begin_src python
 from datetime import date
 
 from data_quality_monitoring.src.store import Store
@@ -163,8 +174,8 @@ def create_data() -> dict:
     """
 
     store_name = ["Nancy", "Paris", "Lille", "Cholet", "Cabourg"]
-    store_avg_visit = [3000, 8000, 6000, 2000, 1700]
-    store_std_visit = [500, 800, 500, 400, 100]
+    store_avg_visit = [4444, 8000, 5600, 2000, 2750]
+    store_std_visit = [2800, 750, 1200, 300, 1000]
     perc_malfunction = [0.05, 0.1, 0.08, 0.05, 0.05]
     perc_break = [0.05, 0.08, 0.05, 0.02, 0]
 
@@ -185,8 +196,10 @@ if __name__ == '__main__':
 
 ** Unit tests :noexport:
 *** sensors
-
-#+begin_src python :tangle tests/test_sensors.py
+:properties:
+#  :header-args:python: :tangle tests/test_sensors.py
+:end:
+#+begin_src python
 import unittest
 from datetime import date
 
@@ -214,7 +227,7 @@ class TestVisitSensor(unittest.TestCase):
     def test_with_malfunction(self):
         visit_sensor = Sensor(1500, 150, perc_malfunction=15)
         visit_count = visit_sensor.get_visit_count(date(2023, 10, 12), 20)
-        self.assertEqual(visit_count, 276)
+        self.assertEqual(visit_count, 20)
 
 
 if __name__ == "__main__":
@@ -222,7 +235,10 @@ if __name__ == "__main__":
 #+end_src
 
 *** store
-#+begin_src python :tangle tests/test_store.py
+:properties:
+ # :header-args:python: :tangle tests/test_store.py
+:end:
+#+begin_src python
 import unittest
 from datetime import date
 
@@ -234,13 +250,13 @@ class TestStore(unittest.TestCase):
         lille_store = Store("Test", 1200, 300)
         visits = lille_store.get_store_traffic(date(2023, 12, 21), 18)
 
-        self.assertEqual(visits, 880)
+        self.assertEqual(visits, 111)
 
     def test_get_sensor_traffic(self):
         lille_store = Store("Test", 1200, 300)
         visits = lille_store.get_sensor_traffic(3, date(2023, 12, 21), 18)
 
-        self.assertEqual(visits, 276)
+        self.assertEqual(visits, 35)
 
     def test_sunday_closed(self):
         lille_store = Store("Test", 1200, 300)
@@ -253,10 +269,15 @@ if __name__ == "__main__":
 #+end_src
 
 * API
+  :PROPERTIES:
+#  :header-args:python: :tangle app.py
+  :END:
 - Creation of an api with FastAPI
 - We create it to simulate the provider's API, here the API is deployed locally.
-To launch the api locally, run ~uvicorn app:app --reload~
-#+begin_src python :tangle app.py
+- To launch the api locally, run ~uvicorn app:app --reload~
+** Code :noexport:
+
+#+begin_src python
 import logging
 from datetime import date
 
@@ -284,9 +305,6 @@ def get_nb_visitors(store_name: str="Nancy", year: int=2021, month: int=1, day: 
     # Check the date is in the past
     if date.today() < requested_date:
         return JSONResponse(status_code=404, content="Choose a date in the past")
-    # If no sensor choose return the visit for the whole store
-    if hour > max(store_dict[store_name].sensors[0].open_hours):
-        hour =  21
     if sensor_id is None:
         visit_counts = store_dict[store_name].get_store_traffic(requested_date, hour)
     elif sensor_id not in range(len(store_dict[store_name].sensors)):
@@ -297,7 +315,7 @@ def get_nb_visitors(store_name: str="Nancy", year: int=2021, month: int=1, day: 
         visit_counts = store_dict[store_name].get_sensor_traffic(
             sensor_id, requested_date, hour
         )
-    if visit_counts < 0 or hour < min(store_dict[store_name].sensors[0].open_hours):
+    if visit_counts < 0 or hour not in store_dict[store_name].sensors[0].open_hours:
         return JSONResponse(
             status_code=404, content="The store was closed try another date or hour."
         )
@@ -305,24 +323,298 @@ def get_nb_visitors(store_name: str="Nancy", year: int=2021, month: int=1, day: 
 #+end_src
 
 * Data Extraction
-The goal is to request the API to build our data
-#+begin_src python :tangle data_extraction.py
+  :PROPERTIES:
+ # :header-args:python: :tangle data_extraction.py
+  :END:
+The goal is to request the API to build our data.
+You must deploy the API locally before running the script.
+** Imports, constants :noexport:
+#+begin_src python
 import sys
-from datetime import date
-
+from pathlib import Path
+from datetime import date, timedelta
+import pandas as pd
 import requests
 
-year, month, day = [int(v) for v in sys.argv[1].split("-")]
-date_ = date(year, month, day)
-assert type(date_) == date
-print(date_.year, type(date_.year))
-def request_api(day:date = date_, hour=21, url="http://127.0.0.1:8000/"):
+date_ex = date(2023, 1, 25)
+#+end_src
+
+** Request api :noexport:
+#+begin_src python
+def request_api(store_name:str = "Nancy", day:date =  date_ex,
+                hour:int=21, sensor_id:int=0, url="http://127.0.0.1:8000/"):
     """Request information from an API"""
-    params = {'year':day.year,
+    if len(sys.argv) > 1:
+        store_name:str = sys.argv[1]
+        day:date = date(*tuple(int(v) for v in sys.argv[2].split("-")))
+        hour:int=sys.argv[3]
+        sensor_id:int=sys.argv[4]
+    assert type(day) == date
+    params = {"store_name": store_name,
+              'year':day.year,
               "month":day.month,
               "day":day.day,
-              "hour":hour}
+              "hour":hour,
+              "sensor_id":sensor_id}
     r = requests.get(url, params=params)
     return r.content
-print(request_api(date_, 7))
+#+end_src
+
+** Generate csv :noexport:
+#+begin_src python
+def generate_csv():
+    """Generate csv containing sensors data, 1 csv per month"""
+
+    # Create data/raw if it does not exist
+    save_path = 'data/raw'
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+
+    # Generate dataframe  containing the data for each month, until we reach the current date
+    current_day = date(2020, 1,1)
+    data = []
+    while current_day < date.today():
+        for store in {"Nancy", "Paris", "Lille", "Cholet", "Cabourg"}:
+            for hour in range(9,22):
+                for sensor_id in range(5):
+                    data.append([current_day, hour, store, sensor_id,
+                                 request_api(store, current_day, hour, sensor_id), 'visitors', current_day.weekday()])
+        next_day = current_day + timedelta(days=1)
+        # if new month, generate and save the dataframe
+        if next_day.month > current_day.month:
+            df = pd.DataFrame(data)
+            df.rename(columns={0:'date', 1: 'hour', 2: 'store', 3:'sensor_id', 4: 'count', 5:'units', 6: 'weekday'}, inplace=True)
+            noise_df1 = df.sample(frac=0.1)
+            noise_df1['units'] = 'items'
+            noise_df2 = df.sample(frac=0.15)
+            noise_df2['sensor_id'] = 'NULL'
+            dataframe = pd.concat([df, noise_df1, noise_df2]).sample(frac=1)
+            dataframe.to_csv(f'{save_path}/{current_day.year}-{current_day.month:02d}.csv',
+                             index=False)
+            # reset the list containing the data
+            data = []
+        # extract data about the next day
+        current_day=next_day
+    return
+        
+                
+#+end_src
+** __main__ :noexport:
+#+begin_src python
+if __name__ == '__main__':
+    generate_csv()
+
+#+end_src
+* Transform Data
+  :PROPERTIES:
+# :header-args:python: :tangle data_transformation.py
+  :END:
+- Computation of the daily traffic by store
+- Computation of the moving average daily traffic for the same day of the week over the last 4 weeks
+- Computation of this moving average change from one week to the next
+- Export to parquet file
+** Import :noexport:
+#+begin_src python
+from pathlib import Path
+
+import pandas as pd
+import duckdb
+
+#+end_src
+** Read data :noexport:
+#+begin_src python
+def read_data() -> pd.DataFrame:
+    df = pd.DataFrame()
+    raw_data_folder = Path.cwd().joinpath('data', 'raw')
+    # Concatenate all csv into one dataframe
+    for file in raw_data_folder.glob('*.csv'):
+        csv_path = raw_data_folder.joinpath(file)
+        df = pd.concat([df, pd.read_csv(csv_path)])
+
+    # Remove duplicate rows
+    df = df.drop_duplicates()
+    # count column is composed of str values
+    # Keep only the numbers, replace others values by NaN
+    df['count'] = df['count'].str.replace(r"b'(\d+| )'",r'\1', regex=True)
+    df['count'] = pd.to_numeric(df['count'], errors="coerce")
+    return df
+#+end_src
+** daily trafic :noexport:
+#+begin_src python
+def get_daily_traffic_per_store(df:pd.DataFrame) -> pd.DataFrame:
+    """Keep rows where:
+    - units value is equal to visitor
+    - sensor_id is not a null value"""
+    query = """SELECT date, store, sensor_id, weekday, sum(count) as daily_traffic FROM df
+    WHERE units == 'visitors' and sensor_id IS NOT NULL
+    GROUP BY date, weekday, store, sensor_id
+    ORDER BY date, store, sensor_id
+    """
+    result_df = duckdb.sql(query).df()
+    return result_df
+#+end_src
+** traffic average over 1 month :noexport:
+#+begin_src python
+def traffic_average_week(df:pd.DataFrame, n_week:int = 4):
+    """Compute the moving average over the last $n_weeks weeks"""
+    query = f"""
+    SELECT date,
+    store,
+    weekday,
+    sensor_id,
+daily_traffic,
+    AVG(daily_traffic)
+    OVER(PARTITION BY weekday, store, sensor_id
+    ORDER BY date
+    ROWS BETWEEN  {n_week-1} PRECEDING AND CURRENT ROW)
+    AS avg_n_weeks
+    from df
+    ORDER BY date, sensor_id, store
+    """
+    return duckdb.sql(query).df()
+#+end_src
+** percentage_change :noexport:
+#+begin_src python
+def pct_traffic_average_week(df:pd.DataFrame, n_week:int = 4):
+    """Compute the percentage change between the moving average
+    and the average of the current week"""
+    query = f"""
+    SELECT date, store, weekday, sensor_id,
+    daily_traffic, avg_n_weeks,
+    LAG(avg_n_weeks)
+    OVER(PARTITION BY weekday, store, sensor_id
+    ORDER BY date)  AS lag_avg_n_weeks,
+    (100*(avg_n_weeks - lag_avg_n_weeks)/lag_avg_n_weeks) as pct_change
+    from df
+    """
+    return duckdb.sql(query).df()
+
+#+end_src
+** save_df_to_parquet :noexport:
+#+begin_src python
+def save_df_to_parquet(df:pd.DataFrame):
+    """Create the folder filtered in data/ and save the dataframe to a parquet file"""
+    save_path = 'data/filtered'
+    Path(save_path).mkdir(parents=True, exist_ok=True)
+    df.to_parquet(Path(save_path, 'df.parquet.gzip'),
+              compression='gzip', index=False)
+
+#+end_src
+
+** generate_filtered_data :noexport:
+#+begin_src python
+def generate_filtered_data():
+    df =  read_data()
+    df= get_daily_traffic_per_store(df)
+    df = traffic_average_week(df)
+    df = pct_traffic_average_week(df)
+    save_df_to_parquet(df)
+
+#+end_src
+** __main__ :noexport:
+#+begin_src python
+if __name__ == '__main__':
+   generate_filtered_data()
+
+
+#+end_src
+* App
+:properties:
+  # :header-args:python: :tangle app_streamlit.py
+:end:
+
+- Creation of a streamlit webapp
+- Choice of a store and a sensor to display its data and barplots about its most recent stats.
+- Run the app using ~streamlit run app_streamlit.py~
+** Imports :noexport:
+#+begin_src python
+import duckdb
+import pandas as pd
+import streamlit as st
+import matplotlib.pyplot as plt
+
+
+df = duckdb.read_parquet('data/filtered/df.parquet.gzip')
+
+#+end_src
+** Interface :noexport:
+#+begin_src python
+st.title('Sensor stats')
+
+#+end_src
+** Get dataframe, plot data functions :noexport:
+#+begin_src python
+# Display the dataframe about the sensor
+def get_dataframe_sensor(store:str, sensor:float) -> pd.DataFrame:
+    query = f"""
+    SELECT * FROM df
+    WHERE store = '{store}' AND sensor_id = {sensor}
+    ORDER BY date"""
+    return duckdb.sql(query).df()
+
+# Display column data over time
+def plot_data(df:pd.DataFrame, column_name:str, n_weeks:int =4, avg_month=True):
+    title_= 'Daily traffic' if avg_month else 'Traffic over the last 4 same days'
+    query =f"""
+    SELECT * from df
+    ORDER BY date DESC
+    LIMIT {n_weeks*7}
+    """
+    n_months_df = duckdb.sql(query).df()
+    fig, ax = plt.subplots()
+    ax.bar(n_months_df.date.to_numpy()[::-1],
+            n_months_df[column_name].to_numpy()[::-1])
+    ax.set(xlabel='date', ylabel='daily traffic (visitors)',
+           title=f'{title_} over the {n_weeks} previous weeks')
+    ax.tick_params(axis='x', labelrotation=77)
+    st.pyplot(fig)
+    return
+#+end_src
+** Sidebar, choice of the sensor :noexport:
+#+begin_src python
+
+# Choice of the store, sensor
+with st.form('sidebar'):
+    with st.sidebar:
+        available_stores_df = duckdb.sql('SELECT DISTINCT store, sensor_id from df ORDER BY store, sensor_id').df()
+        store = st.selectbox(
+        label="Select a store to display its sensors:",
+        #options=available_stores_df.apply(tuple, axis=1),
+        options = available_stores_df['store'].unique(),
+        placeholder='Pick a store.',
+            index=None
+    )
+        if store:
+            available_sensors_df = duckdb.sql(f"SELECT DISTINCT  sensor_id from df WHERE store = '{store}' ORDER BY sensor_id").df()
+            sensor = st.selectbox(
+                        label="Select a sensor to show its stats:",
+                        options = available_sensors_df['sensor_id'].unique(),
+                        placeholder='Pick a sensor.',
+                index=None
+            )
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            st.write(f'You chose: Store: {store}, sensor: {sensor}.')
+            sensor_df = get_dataframe_sensor(store= store, sensor=sensor)
+
+
+#+end_src
+
+** Page body, tabs :noexport:
+#+begin_src python
+
+
+dataframe_tab, daily_traffic, avg_month = st.tabs(["Dataframe", "Daily Traffic Plot", "Moving Average"])
+with dataframe_tab:
+    if submitted:
+        st.dataframe(sensor_df)
+with daily_traffic:
+    n_weeks = st.number_input("Daily traffic over the N previous weeks", value=4, placeholder="Type a number and submit again", min_value=1, key='day')
+    if submitted:
+        st.write('If you want to modify the number of weeks, please modify the above value and submit again.')
+        plot_data(sensor_df,  'daily_traffic', n_weeks)
+with avg_month:
+    n_week_month = st.number_input("Day traffic moving average over the N previous weeks", value=4, placeholder="Type a number and submit again", min_value=1, key = 'avg')
+    if submitted:
+        st.write('If you want to modify the number of weeks, please modify the above value and submit again.')
+        plot_data(sensor_df,  'avg_n_weeks', n_week_month)
 #+end_src

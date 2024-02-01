@@ -62,8 +62,8 @@ class Sensor:
             visits *= 0.2  # make it so bad we can detect it ;)
         visits = np.floor(visits)
         for hour_, visit_count in zip(self.open_hours, visits):
-            visitors_count += visit_count
             if hour_ == hour:
+                visitors_count = visit_count
                 break
         return int(visitors_count)
 

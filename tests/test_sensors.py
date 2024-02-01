@@ -26,7 +26,7 @@ class TestVisitSensor(unittest.TestCase):
     def test_with_malfunction(self):
         visit_sensor = Sensor(1500, 150, perc_malfunction=15)
         visit_count = visit_sensor.get_visit_count(date(2023, 10, 12), 20)
-        self.assertEqual(visit_count, 276)
+        self.assertEqual(visit_count, 20)
 
 
 if __name__ == "__main__":
