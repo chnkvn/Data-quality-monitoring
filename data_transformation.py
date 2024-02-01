@@ -3,11 +3,12 @@ from pathlib import Path
 import pandas as pd
 import duckdb
 
+
 def read_data() -> pd.DataFrame:
     df = pd.DataFrame()
-    raw_data_folder = Path.cwd().joinpath('data', 'raw')
+    raw_data_folder = Path.cwd().joinpath("data", "raw")
     # Concatenate all csv into one dataframe
-    for file in raw_data_folder.glob('*.csv'):
+    for file in raw_data_folder.glob("*.csv"):
         csv_path = raw_data_folder.joinpath(file)
         df = pd.concat([df, pd.read_csv(csv_path)])
 
@@ -15,11 +16,12 @@ def read_data() -> pd.DataFrame:
     df = df.drop_duplicates()
     # count column is composed of str values
     # Keep only the numbers, replace others values by NaN
-    df['count'] = df['count'].str.replace(r"b'(\d+| )'",r'\1', regex=True)
-    df['count'] = pd.to_numeric(df['count'], errors="coerce")
+    df["count"] = df["count"].str.replace(r"b'(\d+| )'", r"\1", regex=True)
+    df["count"] = pd.to_numeric(df["count"], errors="coerce")
     return df
 
-def get_daily_traffic_per_store(df:pd.DataFrame) -> pd.DataFrame:
+
+def get_daily_traffic_per_store(df: pd.DataFrame) -> pd.DataFrame:
     """Keep rows where:
     - units value is equal to visitor
     - sensor_id is not a null value"""
@@ -31,7 +33,8 @@ def get_daily_traffic_per_store(df:pd.DataFrame) -> pd.DataFrame:
     result_df = duckdb.sql(query).df()
     return result_df
 
-def traffic_average_week(df:pd.DataFrame, n_week:int = 4):
+
+def traffic_average_week(df: pd.DataFrame, n_week: int = 4):
     """Compute the moving average over the last $n_weeks weeks"""
     query = f"""
     SELECT date,
@@ -49,7 +52,8 @@ daily_traffic,
     """
     return duckdb.sql(query).df()
 
-def pct_traffic_average_week(df:pd.DataFrame, n_week:int = 4):
+
+def pct_traffic_average_week(df: pd.DataFrame, n_week: int = 4):
     """Compute the percentage change between the moving average
     and the average of the current week"""
     query = f"""
@@ -63,19 +67,21 @@ def pct_traffic_average_week(df:pd.DataFrame, n_week:int = 4):
     """
     return duckdb.sql(query).df()
 
-def save_df_to_parquet(df:pd.DataFrame):
+
+def save_df_to_parquet(df: pd.DataFrame):
     """Create the folder filtered in data/ and save the dataframe to a parquet file"""
-    save_path = 'data/filtered'
+    save_path = "data/filtered"
     Path(save_path).mkdir(parents=True, exist_ok=True)
-    df.to_parquet(Path(save_path, 'df.parquet.gzip'),
-              compression='gzip', index=False)
+    df.to_parquet(Path(save_path, "df.parquet.gzip"), compression="gzip", index=False)
+
 
 def generate_filtered_data():
-    df =  read_data()
-    df= get_daily_traffic_per_store(df)
+    df = read_data()
+    df = get_daily_traffic_per_store(df)
     df = traffic_average_week(df)
     df = pct_traffic_average_week(df)
     save_df_to_parquet(df)
 
-if __name__ == '__main__':
-   generate_filtered_data()
+
+if __name__ == "__main__":
+    generate_filtered_data()

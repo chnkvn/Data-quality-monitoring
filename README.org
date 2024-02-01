@@ -4,7 +4,8 @@
 * Data Creation
 - The first part of this project is to create fake data
 - It should be requestable with an API
-** Sensor
+- Fake data creation using numpy
+** Sensor :noexport:
 :properties:
 # :header-args:python: :tangle src/sensor.py
 :end:
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     captor = Sensor(1500, 150)
     print(captor.get_visit_count(queried_date, hour))
 #+end_src
-** Store
+** Store :noexport:
 :properties:
 # :header-args:python: :tangle src/store.py
 :end:
@@ -153,7 +154,7 @@ if __name__ == '__main__':
     visits = lille_store.get_store_traffic(date(2023, 12, 21), 18)
     print(visits)
 #+end_src
-** init
+** init :noexport:
 :properties:
 # :header-args:python: :tangle __init__.py
 :end:
@@ -193,7 +194,7 @@ if __name__ == '__main__':
 #+end_src
 
 
-** Unit tests
+** Unit tests :noexport:
 *** sensors
 :properties:
 #  :header-args:python: :tangle tests/test_sensors.py
@@ -273,7 +274,9 @@ if __name__ == "__main__":
   :END:
 - Creation of an api with FastAPI
 - We create it to simulate the provider's API, here the API is deployed locally.
-To launch the api locally, run ~uvicorn app:app --reload~
+- To launch the api locally, run ~uvicorn app:app --reload~
+** Code :noexport:
+
 #+begin_src python
 import logging
 from datetime import date
@@ -325,7 +328,7 @@ def get_nb_visitors(store_name: str="Nancy", year: int=2021, month: int=1, day: 
   :END:
 The goal is to request the API to build our data.
 You must deploy the API locally before running the script.
-** Imports, constants
+** Imports, constants :noexport:
 #+begin_src python
 import sys
 from pathlib import Path
@@ -336,7 +339,7 @@ import requests
 date_ex = date(2023, 1, 25)
 #+end_src
 
-** Request api
+** Request api :noexport:
 #+begin_src python
 def request_api(store_name:str = "Nancy", day:date =  date_ex,
                 hour:int=21, sensor_id:int=0, url="http://127.0.0.1:8000/"):
@@ -357,7 +360,7 @@ def request_api(store_name:str = "Nancy", day:date =  date_ex,
     return r.content
 #+end_src
 
-** Generate csv
+** Generate csv :noexport:
 #+begin_src python
 def generate_csv():
     """Generate csv containing sensors data, 1 csv per month"""
@@ -395,7 +398,7 @@ def generate_csv():
         
                 
 #+end_src
-** __main__
+** __main__ :noexport:
 #+begin_src python
 if __name__ == '__main__':
     generate_csv()
@@ -403,9 +406,13 @@ if __name__ == '__main__':
 #+end_src
 * Transform Data
   :PROPERTIES:
-:header-args:python: :tangle data_transformation.py
+# :header-args:python: :tangle data_transformation.py
   :END:
-** Import
+- Computation of the daily traffic by store
+- Computation of the moving average daily traffic for the same day of the week over the last 4 weeks
+- Computation of this moving average change from one week to the next
+- Export to parquet file
+** Import :noexport:
 #+begin_src python
 from pathlib import Path
 
@@ -413,7 +420,7 @@ import pandas as pd
 import duckdb
 
 #+end_src
-** Read data
+** Read data :noexport:
 #+begin_src python
 def read_data() -> pd.DataFrame:
     df = pd.DataFrame()
@@ -431,7 +438,7 @@ def read_data() -> pd.DataFrame:
     df['count'] = pd.to_numeric(df['count'], errors="coerce")
     return df
 #+end_src
-** daily trafic
+** daily trafic :noexport:
 #+begin_src python
 def get_daily_traffic_per_store(df:pd.DataFrame) -> pd.DataFrame:
     """Keep rows where:
@@ -445,7 +452,7 @@ def get_daily_traffic_per_store(df:pd.DataFrame) -> pd.DataFrame:
     result_df = duckdb.sql(query).df()
     return result_df
 #+end_src
-** traffic average over 1 month
+** traffic average over 1 month :noexport:
 #+begin_src python
 def traffic_average_week(df:pd.DataFrame, n_week:int = 4):
     """Compute the moving average over the last $n_weeks weeks"""
@@ -465,7 +472,7 @@ daily_traffic,
     """
     return duckdb.sql(query).df()
 #+end_src
-** percentage_change
+** percentage_change :noexport:
 #+begin_src python
 def pct_traffic_average_week(df:pd.DataFrame, n_week:int = 4):
     """Compute the percentage change between the moving average
@@ -482,7 +489,7 @@ def pct_traffic_average_week(df:pd.DataFrame, n_week:int = 4):
     return duckdb.sql(query).df()
 
 #+end_src
-** save_df_to_parquet
+** save_df_to_parquet :noexport:
 #+begin_src python
 def save_df_to_parquet(df:pd.DataFrame):
     """Create the folder filtered in data/ and save the dataframe to a parquet file"""
@@ -493,7 +500,7 @@ def save_df_to_parquet(df:pd.DataFrame):
 
 #+end_src
 
-** generate_filtered_data
+** generate_filtered_data :noexport:
 #+begin_src python
 def generate_filtered_data():
     df =  read_data()
@@ -503,7 +510,7 @@ def generate_filtered_data():
     save_df_to_parquet(df)
 
 #+end_src
-** __main__
+** __main__ :noexport:
 #+begin_src python
 if __name__ == '__main__':
    generate_filtered_data()
@@ -512,9 +519,13 @@ if __name__ == '__main__':
 #+end_src
 * App
 :properties:
-  :header-args:python: :tangle app_streamlit.py
+  # :header-args:python: :tangle app_streamlit.py
 :end:
-** Imports
+
+- Creation of a streamlit webapp
+- Choice of a store and a sensor to display its data and barplots about its most recent stats.
+- Run the app using ~streamlit run app_streamlit.py~
+** Imports :noexport:
 #+begin_src python
 import duckdb
 import pandas as pd
@@ -525,7 +536,12 @@ import matplotlib.pyplot as plt
 df = duckdb.read_parquet('data/filtered/df.parquet.gzip')
 
 #+end_src
-** List of stores, sensors
+** Interface :noexport:
+#+begin_src python
+st.title('Sensor stats')
+
+#+end_src
+** Get dataframe, plot data functions :noexport:
 #+begin_src python
 # Display the dataframe about the sensor
 def get_dataframe_sensor(store:str, sensor:float) -> pd.DataFrame:
@@ -552,21 +568,40 @@ def plot_data(df:pd.DataFrame, column_name:str, n_weeks:int =4, avg_month=True):
     ax.tick_params(axis='x', labelrotation=77)
     st.pyplot(fig)
     return
+#+end_src
+** Sidebar, choice of the sensor :noexport:
+#+begin_src python
 
 # Choice of the store, sensor
 with st.form('sidebar'):
     with st.sidebar:
-        available_stores_df = duckdb.sql('SELECT DISTINCT store, sensor_id from df').df()
-        sensors = st.selectbox(
-        label="Select a sensor:",
-        options=available_stores_df.apply(tuple, axis=1),
-        placeholder='Pick a store',
+        available_stores_df = duckdb.sql('SELECT DISTINCT store, sensor_id from df ORDER BY store, sensor_id').df()
+        store = st.selectbox(
+        label="Select a store to display its sensors:",
+        #options=available_stores_df.apply(tuple, axis=1),
+        options = available_stores_df['store'].unique(),
+        placeholder='Pick a store.',
+            index=None
     )
+        if store:
+            available_sensors_df = duckdb.sql(f"SELECT DISTINCT  sensor_id from df WHERE store = '{store}' ORDER BY sensor_id").df()
+            sensor = st.selectbox(
+                        label="Select a sensor to show its stats:",
+                        options = available_sensors_df['sensor_id'].unique(),
+                        placeholder='Pick a sensor.',
+                index=None
+            )
         submitted = st.form_submit_button("Submit")
         if submitted:
-            store, sensor = sensors
             st.write(f'You chose: Store: {store}, sensor: {sensor}.')
             sensor_df = get_dataframe_sensor(store= store, sensor=sensor)
+
+
+#+end_src
+
+** Page body, tabs :noexport:
+#+begin_src python
+
 
 dataframe_tab, daily_traffic, avg_month = st.tabs(["Dataframe", "Daily Traffic Plot", "Moving Average"])
 with dataframe_tab:
