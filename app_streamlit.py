@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 df = duckdb.read_parquet("data/filtered/df.parquet.gzip")
 
+st.title("Sensor stats")
+
 
 # Display the dataframe about the sensor
 def get_dataframe_sensor(store: str, sensor: float) -> pd.DataFrame:
@@ -41,16 +43,27 @@ def plot_data(df: pd.DataFrame, column_name: str, n_weeks: int = 4, avg_month=Tr
 with st.form("sidebar"):
     with st.sidebar:
         available_stores_df = duckdb.sql(
-            "SELECT DISTINCT store, sensor_id from df"
+            "SELECT DISTINCT store, sensor_id from df ORDER BY store, sensor_id"
         ).df()
-        sensors = st.selectbox(
-            label="Select a sensor:",
-            options=available_stores_df.apply(tuple, axis=1),
-            placeholder="Pick a store",
+        store = st.selectbox(
+            label="Select a store to display its sensors:",
+            # options=available_stores_df.apply(tuple, axis=1),
+            options=available_stores_df["store"].unique(),
+            placeholder="Pick a store.",
+            index=None,
         )
+        if store:
+            available_sensors_df = duckdb.sql(
+                f"SELECT DISTINCT  sensor_id from df WHERE store = '{store}' ORDER BY sensor_id"
+            ).df()
+            sensor = st.selectbox(
+                label="Select a sensor to show its stats:",
+                options=available_sensors_df["sensor_id"].unique(),
+                placeholder="Pick a sensor.",
+                index=None,
+            )
         submitted = st.form_submit_button("Submit")
         if submitted:
-            store, sensor = sensors
             st.write(f"You chose: Store: {store}, sensor: {sensor}.")
             sensor_df = get_dataframe_sensor(store=store, sensor=sensor)
 
