@@ -3,12 +3,11 @@
 #+startup: overview
 * Objective
 - Illustrate a small process of data engineering
-  - Creation of fake data
-  - API creation and API requests
-  - Data Extraction
-  - Data transformation
-  - WebApp creation for dava visualisation
-  - Using workflows to check code syntax (black)
+  - Creation of fake data: stores that have several sensors to count visitors and send data hourly
+  - API creation and API requests for Data extraction
+  - Data transformation: creation of new stats (daily traffic, moving average for each weekday)
+  - WebApp creation for data visualisation
+  - Using workflows to check code syntax (black for PEP8)
 * Installation
 - Create a new virtual environment, using poetry, venv, conda
 - run ~pip install -r requirements.txt~
@@ -631,3 +630,7 @@ with avg_month:
         st.write('If you want to modify the number of weeks, please modify the above value and submit again.')
         plot_data(sensor_df,  'avg_n_weeks', n_week_month)
 #+end_src
+* Potential next steps
+- Add alert if the value of a sensor is below a fixed threshold
+- Containerize the repo in a Docker container to run it on the cloud
+- Store the data on the cloud

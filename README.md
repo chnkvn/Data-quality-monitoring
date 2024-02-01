@@ -1,30 +1,30 @@
 
 # Table of Contents
 
-1.  [Objective](#org2b76a70)
-2.  [Installation](#orgc039987)
-3.  [Data Creation](#org33d5ce6)
-4.  [API](#orgcd3df2f)
-5.  [Data Extraction](#org17098fd)
-6.  [Transform Data](#orgfdb4287)
-7.  [App](#org72d8f56)
+1.  [Objective](#orgbcde96c)
+2.  [Installation](#org764fd0b)
+3.  [Data Creation](#org45e78d3)
+4.  [API](#org89d1b64)
+5.  [Data Extraction](#org4a8b440)
+6.  [Transform Data](#org4b61430)
+7.  [App](#org19e3f16)
+8.  [Potential next steps](#orga60d5e3)
 
 
 
-<a id="org2b76a70"></a>
+<a id="orgbcde96c"></a>
 
 # Objective
 
 -   Illustrate a small process of data engineering
-    -   Creation of fake data
-    -   API creation and API requests
-    -   Data Extraction
-    -   Data transformation
-    -   WebApp creation for dava visualisation
-    -   Using workflows to check code syntax (black)
+    -   Creation of fake data: stores that have several sensors to count visitors and send data hourly
+    -   API creation and API requests for Data extraction
+    -   Data transformation: creation of new stats (daily traffic, moving average for each weekday)
+    -   WebApp creation for data visualisation
+    -   Using workflows to check code syntax (black for PEP8)
 
 
-<a id="orgc039987"></a>
+<a id="org764fd0b"></a>
 
 # Installation
 
@@ -32,7 +32,7 @@
 -   run `pip install -r requirements.txt`
 
 
-<a id="org33d5ce6"></a>
+<a id="org45e78d3"></a>
 
 # Data Creation
 
@@ -42,7 +42,7 @@
 -   Unit tests for Sensor and Store classes `python tests/test_sensors.py` `python tests/test_store.py`
 
 
-<a id="orgcd3df2f"></a>
+<a id="org89d1b64"></a>
 
 # API
 
@@ -51,7 +51,7 @@
 -   To launch the api locally, run `uvicorn app:app --reload`
 
 
-<a id="org17098fd"></a>
+<a id="org4a8b440"></a>
 
 # Data Extraction
 
@@ -59,7 +59,7 @@ The goal is to request the API to build our data.
 You must deploy the API locally before running the script.
 
 
-<a id="orgfdb4287"></a>
+<a id="org4b61430"></a>
 
 # Transform Data
 
@@ -69,11 +69,20 @@ You must deploy the API locally before running the script.
 -   Export to parquet file
 
 
-<a id="org72d8f56"></a>
+<a id="org19e3f16"></a>
 
 # App
 
 -   Creation of a streamlit webapp
 -   Choice of a store and a sensor to display its data and barplots about its most recent stats.
 -   Run the app using `streamlit run app_streamlit.py`
+
+
+<a id="orga60d5e3"></a>
+
+# Potential next steps
+
+-   Add alert if the value of a sensor is below a fixed threshold
+-   Containerize the repo in a Docker container to run it on the cloud
+-   Store the data on the cloud
 
